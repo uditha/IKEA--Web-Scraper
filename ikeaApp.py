@@ -53,25 +53,50 @@ def getFullName(driver):
 
 
 def getProductDescription(driver):
-    general_text = driver.find_element(By.CLASS_NAME, 'pip-product-summary__description').text
-    general_text = "<p>" + general_text + "</p>"
+    try:
+        general_text = driver.find_element(By.CLASS_NAME, 'pip-product-summary__description').text
+        general_text = "<p>" + general_text + "</p>"
+    except:
+        general_text = ""
     #open Model
     fist_btn = driver.find_element(By.CLASS_NAME,'pip-chunky-header__details')
     driver.execute_script("arguments[0].click();", fist_btn)
     
-    modalHeader = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, "//*[@id='range-modal-mount-node']//*[@class='pip-product-details__title']/font/font"))).text
-    modalText = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, "//*[@id='range-modal-mount-node']//*[@class='pip-product-details__container']"))).text
+    
+    try:
+        modalHeader = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, "//*[@id='range-modal-mount-node']//*[@class='pip-product-details__title']/font/font"))).text
+    except:
+        modalHeader = ""
+    
+    try:
+        modalText = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, "//*[@id='range-modal-mount-node']//*[@class='pip-product-details__container']"))).text
+    except:
+        modalText = ""
+    
+    
     metBtn = driver.find_element(By.XPATH, '//*[@id="product-details-material-and-care"]/div[1]/button').click()
     
     time.sleep(2)
     
-    metText = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, "//*[@id='SEC_product-details-material-and-care']/div"))).text
+    try:
+        metText = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, "//*[@id='SEC_product-details-material-and-care']/div"))).text
+    except:
+        metText = ""
+    
     ActionChains(driver).send_keys(Keys.ESCAPE).perform()
     
     measbtn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="pip-product-information-section"]/div[2]/button'))).click()
-    measTitle = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="range-modal-mount-node"]/div/div[3]/div/div[2]/div/div/div/h2/font/font'))).text
-    measText = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="range-modal-mount-node"]/div/div[3]/div/div[2]/div/div/div/div[1]'))).text
     
+    try:
+        measTitle = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="range-modal-mount-node"]/div/div[3]/div/div[2]/div/div/div/h2/font/font'))).text
+    except:
+        measTitle = ""
+    
+    try:
+        measText = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="range-modal-mount-node"]/div/div[3]/div/div[2]/div/div/div/div[1]'))).text
+    except:
+        measText = ""
+        
     ActionChains(driver).send_keys(Keys.ESCAPE).perform()
     
     return (general_text + "<br> <strong> " + modalHeader + "</strong><br ><br>" + modalText + '<br><br>' + metText + '<br><br><strong>' + measTitle + '</strong><br><br>' + measText).replace('\n', '<br >').replace('Дизайнер', '<br><strong> Дизайнер</strong>').replace('Матеріали', '<strong>Матеріали</strong>')
@@ -156,12 +181,12 @@ def scrollToBottom(driver):
         
         
 def createLinksFile(driver):
-    with open('urls.txt') as file:
+    with open('urls2.txt') as file:
         lines = file.read().splitlines()
         
     linksToScrape = []
         
-    for line in lines[0:1]:
+    for line in lines:
         driver.get(line)
         acceptCookies(driver)
         numPages = getNumPages(driver)
@@ -174,7 +199,7 @@ def createLinksFile(driver):
         productHolder = driver.find_element(By.CLASS_NAME, 'plp-product-list__products')
         cards = productHolder.find_elements(By.CLASS_NAME, 'plp-fragment-wrapper')
         
-        for card in cards[0:10]:
+        for card in cards:
             item = {}
             try:
                 product = card.find_element(By.CLASS_NAME, 'pip-product-compact')
@@ -203,12 +228,12 @@ def saveData(path, item):
     else:
         data = [item]
         df = pd.DataFrame(data)
-        
     #df.Description = df.Description.apply(lambda x : x.replace('\n', '\\n'))
     df.to_csv('items.csv', index=False)     
         
 def getItem(driver, row):
     url = getUrlWithTranslator(row['link'])
+    print(url)
     driver.get(url)
     acceptCookies(driver)
     item = {}
@@ -252,6 +277,7 @@ def main():
         if row['ProductID'] not in item_in_file:
             item = getItem(driver, row)
             saveData(path, item)
+            
         
     print('[INFO] Scraping FINISED.')
     
