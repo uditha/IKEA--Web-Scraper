@@ -46,10 +46,14 @@ def acceptCookies(driver):
 
 
 def getFullName(driver):
-    title = driver.find_element(By.CLASS_NAME, "pip-header-section__title--big").text
-    sub_name_el = driver.find_element(By.CLASS_NAME,'pip-header-section__description-text')
-    sub_name = WebDriverWait(sub_name_el, 10).until(EC.element_to_be_clickable((By.TAG_NAME, "font"))).text
-    return  'IKEA ' + title + ' ' + sub_name
+    try:
+        title = driver.find_element(By.CLASS_NAME, "pip-header-section__title--big").text
+        sub_name_el = driver.find_element(By.CLASS_NAME,'pip-header-section__description-text')
+        sub_name = WebDriverWait(sub_name_el, 10).until(EC.element_to_be_clickable((By.TAG_NAME, "font"))).text
+        fullName =   'IKEA ' + title + ' ' + sub_name
+    except:
+        fullName = ''
+    return fullName
 
 
 def getProductDescription(driver):
@@ -103,8 +107,12 @@ def getProductDescription(driver):
 
 
 def getProductSKU(driver):
-    return WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'pip-product-identifier__value'))).text
-
+    try:
+        return WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'pip-product-identifier__value'))).text
+    except:
+        return ''
+    
+    
 def getPrice(driver):
     patternInt = '.*?(?P<Integer>[0-9]+)'
     try:
@@ -145,24 +153,30 @@ def getImageURL(driver):
     
 def getAvailability(driver):
     try:
-        availableBtn = driver.find_element(By.CLASS_NAME, 'pip-availability-modal-open-button')
-        action = ActionChains(driver)
-        action.move_to_element(availableBtn).click().perform()
+        try:
+            availableBtn = driver.find_element(By.CLASS_NAME, 'pip-availability-modal-open-button')
+            action = ActionChains(driver)
+            action.move_to_element(availableBtn).click().perform()
+        except:
+            availableBtn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@class="pip-stockcheck__text-container"]/span/button')))
+            action = ActionChains(driver)
+            action.move_to_element(availableBtn).click().perform()
+        
+        searchInput = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="change-store-input"]'))).send_keys("Katowice")
+        getStoreList = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="range-modal-mount-node"]/div/div[3]/div/div[2]/div/div/div/div[3]'))).find_element(By.CLASS_NAME,'pip-status--leading')
+        return  hasClass(getStoreList, 'pip-status--green')
     except:
-        availableBtn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@class="pip-stockcheck__text-container"]/span/button')))
-        action = ActionChains(driver)
-        action.move_to_element(availableBtn).click().perform()
-     
-    searchInput = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="change-store-input"]'))).send_keys("Katowice")
-    getStoreList = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="range-modal-mount-node"]/div/div[3]/div/div[2]/div/div/div/div[3]'))).find_element(By.CLASS_NAME,'pip-status--leading')
-    return  hasClass(getStoreList, 'pip-status--green')
+        return False
   
 
 def getNumPages(driver):
-    pagText = driver.find_element(By.CLASS_NAME, 'catalog-product-list__total-count').text 
-    numList = (re.findall(r'\d+', pagText))
-    pageNumber = (int(numList[1])//int(numList[0])) + 1
-    return pageNumber
+    try:
+        pagText = driver.find_element(By.CLASS_NAME, 'catalog-product-list__total-count').text 
+        numList = (re.findall(r'\d+', pagText))
+        pageNumber = (int(numList[1])//int(numList[0])) + 1
+        return pageNumber
+    except:
+        return 0
 
 def scrollToBottom(driver):
     SCROLL_PAUSE_TIME = 1
